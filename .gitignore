@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Datasets and outputs (generated locally)
+datasets/
+outputs/
+
+# OS files
+.DS_Store
+Thumbs.db

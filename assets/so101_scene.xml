@@ -1,0 +1,198 @@
+<mujoco model="so101_pick_place">
+  <compiler angle="radian" autolimits="true"/>
+
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="Euler">
+    <flag contact="enable"/>
+  </option>
+
+  <default>
+    <joint armature="0.02" damping="1.5"/>
+    <geom condim="4" friction="1.0 0.005 0.001" solimp="0.95 0.99 0.001 0.5 2" solref="0.02 1.0"/>
+    <position kp="100" ctrlrange="-3.14159 3.14159"/>
+  </default>
+
+  <visual>
+    <global offwidth="960" offheight="720"/>
+    <quality shadowsize="2048"/>
+    <map znear="0.01" zfar="10"/>
+  </visual>
+
+  <!-- ==================== ASSETS ==================== -->
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.85 0.85 0.85" rgb2="0.7 0.7 0.7" width="256" height="256"/>
+    <material name="floor_mat" texture="grid" texrepeat="8 8" reflectance="0.1"/>
+    <texture name="wood" type="2d" builtin="flat" rgb1="0.65 0.45 0.25" rgb2="0.55 0.35 0.18" width="256" height="256" mark="random" markrgb="0.6 0.4 0.2"/>
+    <material name="wood_mat" texture="wood" reflectance="0.05"/>
+    <material name="arm_mat" rgba="0.25 0.25 0.28 1" specular="0.5" shininess="0.5"/>
+    <material name="finger_mat" rgba="0.15 0.15 0.15 1" specular="0.3"/>
+    <material name="box_mat" rgba="0.85 0.15 0.15 1" specular="0.3" shininess="0.3"/>
+    <material name="bowl_mat" rgba="0.2 0.4 0.85 1" specular="0.4" shininess="0.5"/>
+    <material name="base_mat" rgba="0.3 0.3 0.35 1" specular="0.5" shininess="0.5"/>
+  </asset>
+
+  <!-- ==================== WORLD ==================== -->
+  <worldbody>
+    <!-- Floor -->
+    <geom name="floor" type="plane" size="1 1 0.01" pos="0 0 0" material="floor_mat" contype="1" conaffinity="1"/>
+
+    <!-- Ambient and directional lights -->
+    <light name="overhead" directional="true" diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3" pos="0 0 2" dir="0 0 -1" castshadow="true"/>
+    <light name="side_fill" directional="false" diffuse="0.4 0.4 0.4" specular="0.1 0.1 0.1" pos="0.5 -0.5 1.2"/>
+    <light name="back_fill" directional="false" diffuse="0.2 0.2 0.2" specular="0.05 0.05 0.05" pos="-0.3 0.4 1.0"/>
+
+    <!-- Overhead camera -->
+    <!-- Overhead camera — full view of table, arm, and objects -->
+    <camera name="webcam" pos="0.0 -0.5 1.1" quat="0.92 0.39 0 0" fovy="60"/>
+
+    <!-- ==================== TABLE ==================== -->
+    <body name="table" pos="0 0 0.2">
+      <geom name="table_top" type="box" size="0.30 0.25 0.02" pos="0 0 0.20" material="wood_mat" contype="1" conaffinity="1" mass="10"/>
+      <!-- Table legs -->
+      <geom type="cylinder" size="0.02 0.10" pos="0.25 0.20 0.10" material="wood_mat"/>
+      <geom type="cylinder" size="0.02 0.10" pos="-0.25 0.20 0.10" material="wood_mat"/>
+      <geom type="cylinder" size="0.02 0.10" pos="0.25 -0.20 0.10" material="wood_mat"/>
+      <geom type="cylinder" size="0.02 0.10" pos="-0.25 -0.20 0.10" material="wood_mat"/>
+    </body>
+
+    <!-- ==================== ROBOT ARM ==================== -->
+    <body name="base_link" pos="0 -0.15 0.42">
+      <geom name="base" type="cylinder" size="0.04 0.02" material="base_mat" mass="1.0"/>
+
+      <!-- Joint 1: Shoulder Pan (yaw) -->
+      <body name="shoulder_link" pos="0 0 0.03">
+        <joint name="shoulder_pan" type="hinge" axis="0 0 1" range="-3.14159 3.14159"/>
+        <geom name="shoulder_geom" type="capsule" fromto="0 0 0 0 0 0.06" size="0.025" material="arm_mat" mass="0.3"/>
+
+        <!-- Joint 2: Shoulder Lift (pitch) -->
+        <body name="upper_arm_link" pos="0 0 0.06">
+          <joint name="shoulder_lift" type="hinge" axis="0 1 0" range="-1.5708 1.5708"/>
+          <geom name="upper_arm_geom" type="capsule" fromto="0 0 0 0.10 0 0.04" size="0.02" material="arm_mat" mass="0.2"/>
+
+          <!-- Joint 3: Elbow Flex (pitch) -->
+          <body name="forearm_link" pos="0.10 0 0.04">
+            <joint name="elbow_flex" type="hinge" axis="0 1 0" range="-3.14159 0"/>
+            <geom name="forearm_geom" type="capsule" fromto="0 0 0 0.10 0 -0.02" size="0.018" material="arm_mat" mass="0.15"/>
+
+            <!-- Joint 4: Wrist Flex (pitch) -->
+            <body name="wrist_flex_link" pos="0.10 0 -0.02">
+              <joint name="wrist_flex" type="hinge" axis="0 1 0" range="-1.5708 1.5708"/>
+              <geom name="wrist_flex_geom" type="capsule" fromto="0 0 0 0.04 0 0" size="0.015" material="arm_mat" mass="0.1"/>
+
+              <!-- Joint 5: Wrist Roll (roll) -->
+              <body name="wrist_roll_link" pos="0.04 0 0">
+                <joint name="wrist_roll" type="hinge" axis="1 0 0" range="-3.14159 3.14159"/>
+                <geom name="wrist_roll_geom" type="cylinder" size="0.016 0.01" material="arm_mat" mass="0.05"/>
+
+                <!-- Wrist-mounted camera -->
+                <!-- Wrist camera: mounted above gripper, looking down at the fingers/workspace -->
+                <!-- Wrist camera: looks along -local_z toward the gripper/workspace -->
+                <!-- Wrist camera: looks down toward gripper/workspace -->
+                <!-- Wrist camera: mounted on gripper mount, looking forward/down through the fingers -->
+                <camera name="arm_cam" pos="0 0 -0.025" xyaxes="0 1 0 0 0 1" fovy="90"/>
+
+                <!-- End-effector site (at grasp center between finger pads) -->
+                <!-- EE site at center of finger pads (invisible — for IK only) -->
+                <!-- EE site at grasp center (invisible) -->
+                <site name="ee_site" pos="0.0 0 -0.046" size="0.001" rgba="0 0 0 0"/>
+                <!-- finger pads center at body(-0.024) + geom(0, +-0.006, -0.022) = wrist + (0, +-0.006, -0.046) -->
+
+                <!-- ==================== GRIPPER ==================== -->
+                <!-- Parallel jaw gripper. Fixed mount plate at wrist, two sliding
+                     finger prongs. qpos=0 -> closed, qpos=0.04 -> open. -->
+
+                <!-- Fixed gripper mount plate (always attached to wrist) -->
+                <geom name="gripper_mount" type="box" size="0.012 0.028 0.006" pos="0 0 -0.018"
+                      material="finger_mat" mass="0.02"/>
+
+                <!-- Left finger: slides along +Y -->
+                <body name="left_finger" pos="0.0 0.0 -0.024">
+                  <joint name="finger_left" type="slide" axis="0 1 0" range="0 0.04" damping="0.3"/>
+                  <!-- Horizontal slider bar (stays connected to mount visually) -->
+                  <geom name="left_finger_slider" type="box" size="0.006 0.018 0.004" pos="0 0.008 0"
+                        material="finger_mat" mass="0.003" contype="0" conaffinity="0"/>
+                  <!-- Vertical finger pad (gripping surface) -->
+                  <geom name="left_finger_pad" type="box" size="0.008 0.005 0.022" pos="0 0.006 -0.022"
+                        material="finger_mat" mass="0.01"
+                        condim="4" friction="5.0 0.01 0.001"
+                        solimp="0.95 0.99 0.001 0.5 2" solref="0.02 1.0"/>
+                </body>
+
+                <!-- Right finger: slides along -Y -->
+                <body name="right_finger" pos="0.0 0.0 -0.024">
+                  <joint name="finger_right" type="slide" axis="0 -1 0" range="0 0.04" damping="0.3"/>
+                  <!-- Horizontal slider bar -->
+                  <geom name="right_finger_slider" type="box" size="0.006 0.018 0.004" pos="0 -0.008 0"
+                        material="finger_mat" mass="0.003" contype="0" conaffinity="0"/>
+                  <!-- Vertical finger pad -->
+                  <geom name="right_finger_pad" type="box" size="0.008 0.005 0.022" pos="0 -0.006 -0.022"
+                        material="finger_mat" mass="0.01"
+                        condim="4" friction="5.0 0.01 0.001"
+                        solimp="0.95 0.99 0.001 0.5 2" solref="0.02 1.0"/>
+                </body>
+
+              </body> <!-- wrist_roll_link -->
+            </body> <!-- wrist_flex_link -->
+          </body> <!-- forearm_link -->
+        </body> <!-- upper_arm_link -->
+      </body> <!-- shoulder_link -->
+    </body> <!-- base_link -->
+
+    <!-- ==================== OBJECTS ==================== -->
+
+    <!-- Graspable box -->
+    <body name="box" pos="0.15 0.0 0.44">
+      <freejoint name="box_joint"/>
+      <geom name="box_geom" type="box" size="0.015 0.015 0.015"
+            material="box_mat" mass="0.03"
+            condim="4" friction="1.5 0.005 0.001"
+            solimp="0.95 0.99 0.001 0.5 2" solref="0.02 1.0"
+            contype="1" conaffinity="1"/>
+    </body>
+
+    <!-- Bowl (static) -->
+    <body name="bowl" pos="-0.15 0.0 0.42">
+      <!-- Bowl base (thin disc) -->
+      <geom name="bowl_base" type="cylinder" size="0.045 0.003" pos="0 0 0" material="bowl_mat" contype="1" conaffinity="1"/>
+      <!-- Bowl walls (ring of thin boxes approximating a cylinder shell) -->
+      <geom name="bowl_wall_front" type="box" size="0.003 0.045 0.02" pos="0.045 0 0.02" material="bowl_mat" contype="1" conaffinity="1"/>
+      <geom name="bowl_wall_back" type="box" size="0.003 0.045 0.02" pos="-0.045 0 0.02" material="bowl_mat" contype="1" conaffinity="1"/>
+      <geom name="bowl_wall_left" type="box" size="0.045 0.003 0.02" pos="0 0.045 0.02" material="bowl_mat" contype="1" conaffinity="1"/>
+      <geom name="bowl_wall_right" type="box" size="0.045 0.003 0.02" pos="0 -0.045 0.02" material="bowl_mat" contype="1" conaffinity="1"/>
+      <!-- Diagonal walls for rounder shape -->
+      <geom name="bowl_wall_fl" type="box" size="0.003 0.045 0.02" pos="0.032 0.032 0.02" euler="0 0 0.785" material="bowl_mat" contype="1" conaffinity="1"/>
+      <geom name="bowl_wall_fr" type="box" size="0.003 0.045 0.02" pos="0.032 -0.032 0.02" euler="0 0 -0.785" material="bowl_mat" contype="1" conaffinity="1"/>
+      <geom name="bowl_wall_bl" type="box" size="0.003 0.045 0.02" pos="-0.032 0.032 0.02" euler="0 0 -0.785" material="bowl_mat" contype="1" conaffinity="1"/>
+      <geom name="bowl_wall_br" type="box" size="0.003 0.045 0.02" pos="-0.032 -0.032 0.02" euler="0 0 0.785" material="bowl_mat" contype="1" conaffinity="1"/>
+    </body>
+
+  </worldbody>
+
+  <!-- ==================== ACTUATORS ==================== -->
+  <actuator>
+    <position name="act_shoulder_pan"  joint="shoulder_pan"  kp="80" ctrlrange="-3.14159 3.14159"/>
+    <position name="act_shoulder_lift" joint="shoulder_lift" kp="80" ctrlrange="-1.5708 1.5708"/>
+    <position name="act_elbow_flex"    joint="elbow_flex"    kp="80" ctrlrange="-3.14159 0"/>
+    <position name="act_wrist_flex"    joint="wrist_flex"    kp="60"  ctrlrange="-1.5708 1.5708"/>
+    <position name="act_wrist_roll"    joint="wrist_roll"    kp="40"  ctrlrange="-3.14159 3.14159"/>
+    <position name="act_finger_left"   joint="finger_left"   kp="15"  ctrlrange="0 0.04"/>
+    <position name="act_finger_right"  joint="finger_right"  kp="15"  ctrlrange="0 0.04"/>
+  </actuator>
+
+  <equality>
+    <!-- Couple gripper fingers to move symmetrically -->
+    <joint joint1="finger_left" joint2="finger_right" polycoef="0 1 0 0 0"/>
+  </equality>
+
+  <!-- ==================== SENSORS ==================== -->
+  <sensor>
+    <jointpos name="sen_shoulder_pan"  joint="shoulder_pan"/>
+    <jointpos name="sen_shoulder_lift" joint="shoulder_lift"/>
+    <jointpos name="sen_elbow_flex"    joint="elbow_flex"/>
+    <jointpos name="sen_wrist_flex"    joint="wrist_flex"/>
+    <jointpos name="sen_wrist_roll"    joint="wrist_roll"/>
+    <jointpos name="sen_finger_left"   joint="finger_left"/>
+    <framepos  name="sen_ee_pos"  objtype="site" objname="ee_site"/>
+    <framequat name="sen_ee_quat" objtype="site" objname="ee_site"/>
+  </sensor>
+
+</mujoco>
