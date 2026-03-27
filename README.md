@@ -4,6 +4,8 @@ A MuJoCo-based simulation engine for learning robotic manipulation policies. Bui
 
 Simulate a SO-101 robot arm performing pick-and-place tasks. Record demonstrations, implement your own policy (ACT, Diffusion, SmolVLA, or anything custom), train it, and evaluate -- all from a single UI.
 
+![Main Menu](docs/main_menu.png)
+
 ---
 
 ## Table of Contents
@@ -47,6 +49,8 @@ python -m sim_engine
 ```
 
 That's it. The UI will open.
+
+![Scene Overview](docs/scene_overview.png)
 
 ### 3. First run (5 minutes)
 
@@ -117,18 +121,27 @@ Launch with `python -m sim_engine` (or `python -m sim_engine app`).
 | **q** | Quit | Exit the application |
 
 ### Record Screen
+
+![Record Screen](docs/record_screen.png)
+
 - Automatically runs the scripted policy for 10 episodes
 - Each episode is saved as an HDF5 file in `datasets/sim_demos/`
 - Shows live rendering with wrist camera picture-in-picture
 - Red blinking dot indicates recording is active
 
 ### Policies Screen
+
+![Policies Screen](docs/policies_screen.png)
+
 - Lists all policies and their status (implemented / skeleton)
 - Press a policy's key to open it in your code editor (VS Code or default)
 - Press **n** to create a brand new policy from a template
 - Press **o** to open the policies folder
 
 ### Train Screen
+
+![Training](docs/training_screen.png)
+
 - Lists all implemented policies
 - Select one to train (100 epochs, MSE loss on actions)
 - Shows live loss curve during training
@@ -136,6 +149,9 @@ Launch with `python -m sim_engine` (or `python -m sim_engine app`).
 - Checkpoints saved to `outputs/sim_engine/<policy_name>/`
 
 ### Evaluate Screen
+
+![Evaluate Screen](docs/evaluate_screen.png)
+
 - Lists scripted baseline, random baseline, and all trained policies
 - Select one to watch it run for 10 episodes
 - Press **SPACE** before each episode to start
@@ -156,6 +172,10 @@ The robot needs to:
 6. Lower into the bowl
 7. Open the gripper (action[5] = +1)
 8. Return to home position
+
+| Approaching | Grasping | Transporting | Placing |
+|:-----------:|:--------:|:------------:|:-------:|
+| ![](docs/approaching.png) | ![](docs/grasping.png) | ![](docs/transporting.png) | ![](docs/placing.png) |
 
 ### Step 2: Record demonstrations
 
